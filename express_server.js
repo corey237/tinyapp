@@ -53,6 +53,11 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${randomString}`)
 });
 
+app.post('/login', (req, res) => {
+  res.cookie("username", req.body.username);
+  res.redirect('/urls');
+})
+
 app.post('/urls/:id/delete', (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect(`/urls`);
@@ -61,7 +66,8 @@ app.post('/urls/:id/delete', (req, res) => {
 app.post('/urls/:id/update', (req, res) => {
   urlDatabase[req.params.id] = req.body.newURL
   res.redirect('/urls');
-})
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
