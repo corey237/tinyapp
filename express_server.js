@@ -16,6 +16,7 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com'
 };
 
+
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
@@ -50,7 +51,12 @@ app.post('/urls', (req, res) => {
   const randomString = generateRandomString()
   urlDatabase[randomString] = req.body.longURL;
   res.redirect(`/urls/${randomString}`)
-})
+});
+
+app.post('/urls/:id/delete', (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect(`/urls`);
+}) 
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
