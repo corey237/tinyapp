@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
-//FUNCTION FOR GENERATING RANDOM SHORTURL
+//FUNCTION FOR GENERATING RANDOM SHORTURL OR USERID
 const generateRandomString = function () {
   return Math.random().toString(20).substr(2, 6);
 };
@@ -21,6 +21,7 @@ const findUser = function (email) {
 
 //MIDDLEWARE
 const cookieParser = require("cookie-parser");
+const { resolveInclude } = require("ejs");
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -67,7 +68,6 @@ app.get("/register", (req, res) => {
     user: users[req.cookies["user_id"]],
   };
   res.render("./user_registration", templateVars);
-  console.log(req.body);
 });
 
 app.get("/urls.json", (req, res) => {
@@ -75,6 +75,13 @@ app.get("/urls.json", (req, res) => {
     user: users[req.cookies["user_id"]],
   };
   res.json(urlDatabase, templateVars);
+});
+
+app.get("/login", (req, res) => {
+  const templateVars = {
+    user: users[req.cookies["user_id"]],
+  };
+  res.render("user_login", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {

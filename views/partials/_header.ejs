@@ -1,5 +1,4 @@
-<!-- Do a user lookup, check if the user ID exists in the database-->
-
+<header>
   <nav class="navbar navbar-expand-md navbar-dark bg-success">
     <a class="navbar-brand" href="/urls">TinyApp</a>
     <button
@@ -17,20 +16,19 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-          <% if (user) { %>
-              <span class="nav-item nav-link">
-              Logged in as: <%= user.email %></span>
-              <form action="/logout" method="POST">
-              <button class="btn btn-secondary">Logout</button>
-              </form>
-          <% } else { %>
-              <form action="/login" method="POST">
-              <input type="email" name="email" placeholder="Username"/>
-              <input type="password" name="pass" placeholder="Password">
-              <button class="btn btn-dark">Login</button>
-              </form>
-          <% } %>
-
+        <% if (user) { %>
+        <span class="nav-item nav-link"> Logged in as: <%= user.email %></span>
+        <form action="/logout" method="POST">
+          <button class="btn btn-secondary">Logout</button>
+        </form>
+        <% } else { %>
+        <form action="/login" method="GET">
+          <button class="btn btn-primary">Login</button>
+        </form>
+        <form action="/register" method="GET">
+          <button class="btn btn-dark">Register</button>
+        </form>
+        <% } %>
       </div>
     </div>
   </nav>
