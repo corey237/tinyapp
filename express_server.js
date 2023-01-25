@@ -47,11 +47,7 @@ const users = {
 
 //GET ROUTES
 app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  res.redirect("/urls");
 });
 
 app.get("/urls", (req, res) => {
@@ -63,6 +59,9 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
+  if (req.cookies["user_id"]) {
+    return res.redirect("/urls");
+  }
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]],
@@ -78,6 +77,9 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
+  if (req.cookies["user_id"]) {
+    return res.redirect("/urls");
+  }
   const templateVars = {
     user: users[req.cookies["user_id"]],
   };
@@ -85,6 +87,9 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res.redirect("/login");
+  }
   const templateVars = {
     user: users[req.cookies["user_id"]],
   };
@@ -96,6 +101,9 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    return res.status(400).send("URL ID not found.");
+  }
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
@@ -106,6 +114,9 @@ app.get("/urls/:id", (req, res) => {
 
 //POST ROUTES
 app.post("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res.status(400).send("Cannot Shorten URL. Please sign in.");
+  }
   const randomString = generateRandomString();
   urlDatabase[randomString] = req.body.longURL;
   res.redirect(`/urls/${randomString}`);
