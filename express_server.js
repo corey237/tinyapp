@@ -112,13 +112,23 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("user_id", req.body.email);
+  //Confirm that the user is registered
+  const login = findUser(req.body.email);
+  if (login === null) {
+    return res.status(403).send("Invalid email. Please try again");
+  }
+  //Confirm that the password provided matches whats in the database
+  if (login.password !== req.body.password) {
+    return res.status(403).send("Invalid password. Please try again");
+  }
+  //Set login cookie based on object return from loginAuth
+  res.cookie("user_id", login.id);
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 app.post("/register", (req, res) => {
