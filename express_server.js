@@ -19,6 +19,17 @@ const findUser = function (email) {
   return null;
 };
 
+//FUNCTION THAT RETURNS OBJECT CONTAINING URL's THAT BELONG TO THE USER
+const urlsForUser = function (user) {
+  const urlList = {};
+  for (const urlID in urlDatabase) {
+    if (urlDatabase[urlID].userID === user) {
+      urlList[urlID] = urlDatabase[urlID].longURL;
+    }
+  }
+  return urlList;
+};
+
 //MIDDLEWARE
 const cookieParser = require("cookie-parser");
 const { resolveInclude } = require("ejs");
@@ -28,8 +39,18 @@ app.use(cookieParser());
 
 //DATABASES (URLS & USERS)
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b2xVn2: {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "userRandomID",
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "user2RandomID",
+  },
+  f46gs2: {
+    longURL: "http://reddit.com",
+    userID: "user2RandomID",
+  },
 };
 
 const users = {
@@ -47,12 +68,20 @@ const users = {
 
 //GET ROUTES
 app.get("/", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res.redirect("/login");
+  }
   res.redirect("/urls");
 });
 
 app.get("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res
+      .status(400)
+      .send("Cannot access URL's. Please sign or or create an account.");
+  }
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(req.cookies["user_id"]),
     user: users[req.cookies["user_id"]],
   };
   res.render("urls_index", templateVars);
@@ -63,7 +92,7 @@ app.get("/register", (req, res) => {
     return res.redirect("/urls");
   }
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(req.cookies["user_id"]),
     user: users[req.cookies["user_id"]],
   };
   res.render("./user_registration", templateVars);
@@ -72,6 +101,7 @@ app.get("/register", (req, res) => {
 app.get("/urls.json", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]],
+    urls: urlsForUser(req.cookies["user_id"]),
   };
   res.json(urlDatabase, templateVars);
 });
@@ -97,16 +127,23 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  res.redirect(urlDatabase[req.params.id]);
+  res.redirect(urlDatabase[req.params.id].longURL);
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res.status(400).send("Please sign in.");
+  }
   if (!urlDatabase[req.params.id]) {
     return res.status(400).send("URL ID not found.");
   }
+  const usersURLS = urlsForUser(req.cookies["user_id"]);
+  if (!usersURLS[req.params.id]) {
+    return res.status(400).send("Permission denied");
+  }
   const templateVars = {
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
+    longURL: urlDatabase[req.params.id].longURL,
     user: users[req.cookies["user_id"]],
   };
   res.render("urls_show", templateVars);
@@ -118,7 +155,10 @@ app.post("/urls", (req, res) => {
     return res.status(400).send("Cannot Shorten URL. Please sign in.");
   }
   const randomString = generateRandomString();
-  urlDatabase[randomString] = req.body.longURL;
+  urlDatabase[randomString] = {
+    longURL: req.body.longURL,
+    userID: req.cookies["user_id"],
+  };
   res.redirect(`/urls/${randomString}`);
 });
 
@@ -165,12 +205,32 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res.status(400).send("Please sign in.");
+  }
+  if (!urlDatabase[req.params.id]) {
+    return res.status(400).send("URL ID not found.");
+  }
+  const usersURLS = urlsForUser(req.cookies["user_id"]);
+  if (!usersURLS[req.params.id]) {
+    return res.status(400).send("Permission denied");
+  }
   delete urlDatabase[req.params.id];
   res.redirect(`/urls`);
 });
 
 app.post("/urls/:id/update", (req, res) => {
-  urlDatabase[req.params.id] = req.body.newURL;
+  if (!req.cookies["user_id"]) {
+    return res.status(400).send("Please sign in.");
+  }
+  if (!urlDatabase[req.params.id]) {
+    return res.status(400).send("URL ID not found.");
+  }
+  const usersURLS = urlsForUser(req.cookies["user_id"]);
+  if (!usersURLS[req.params.id]) {
+    return res.status(400).send("Permission denied");
+  }
+  urlDatabase[req.params.id].longURL = req.body.newURL;
   res.redirect("/urls");
 });
 
