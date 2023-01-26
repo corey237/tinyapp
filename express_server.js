@@ -36,6 +36,7 @@ const { resolveInclude } = require("ejs");
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+const bcrypt = require("bcryptjs");
 
 //DATABASES (URLS & USERS)
 const urlDatabase = {
@@ -169,7 +170,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Invalid email. Please try again");
   }
   //Confirm that the password provided matches whats in the database
-  if (login.password !== req.body.password) {
+  if (!bcrypt.compareSync(req.body.password, login.password)) {
     return res.status(403).send("Invalid password. Please try again");
   }
   //Set login cookie based on object return from loginAuth
@@ -185,12 +186,12 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   //If the email or password is empty, return an error
   if (!req.body.email || !req.body.password) {
-    return res.status(400).send("Invalid Email or Password");
+    return res.status(400).send("Invalid Email or Password. Please try again.");
   }
   //If the user already exists return an error, otherwise continue with user creation
   const doesUserExist = findUser(req.body.email);
   if (doesUserExist !== null) {
-    return res.status(400).send("User already exists");
+    return res.status(400).send("User already exists.");
   }
   //Generate random user ID
   const userID = generateRandomString();
@@ -198,7 +199,7 @@ app.post("/register", (req, res) => {
   users[userID] = {
     id: userID,
     email: req.body.email,
-    password: req.body.password,
+    password: bcrypt.hashSync(req.body.password, 10),
   };
   res.cookie("user_id", userID);
   res.redirect("/urls");
