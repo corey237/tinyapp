@@ -6,15 +6,15 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 Registration Page
 
-![Registration Page](docs/user_registration.PNG?raw=true "Registration Page")
+![Registration Page](https://github.com/corey237/tinyapp/blob/master/docs/user_registration.PNG?raw=true "Registration Page")
 
 Creating a new Short URL
 
-!["Create URL Page"](docs/create_url.PNG?raw=true "Create URL Page")
+!["Create URL Page"](https://github.com/corey237/tinyapp/blob/master/docs/create_url.PNG?raw=true "Create URL Page")
 
 Displaying Short URL's That Have Been Created
 
-![URL List Page](docs/url_list.PNG?raw=true "URL List Page")
+![URL List Page](https://github.com/corey237/tinyapp/blob/master/docs/url_list.PNG?raw=true "URL List Page")
 
 ## Dependencies
 
