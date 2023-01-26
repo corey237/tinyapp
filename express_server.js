@@ -3,24 +3,12 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
-//FUNCTION FOR GENERATING RANDOM SHORTURL OR USERID
-const generateRandomString = function () {
-  return Math.random().toString(20).substr(2, 6);
-};
-
-//FUNCTION THAT RETURNS OBJECT CONTAINING URL's THAT BELONG TO THE USER
-const urlsForUser = function (user) {
-  const urlList = {};
-  for (const urlID in urlDatabase) {
-    if (urlDatabase[urlID].userID === user) {
-      urlList[urlID] = urlDatabase[urlID].longURL;
-    }
-  }
-  return urlList;
-};
-
 //HELPER FUNCTIONS
-const { findUserByEmail } = require("./helpers");
+const {
+  findUserByEmail,
+  urlsForUser,
+  generateRandomString,
+} = require("./helpers");
 
 //MIDDLEWARE
 var cookieParser = require("cookie-parser");
@@ -38,33 +26,8 @@ app.use(
 app.use(cookieParser());
 
 //DATABASES (URLS & USERS)
-const urlDatabase = {
-  b2xVn2: {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "userRandomID",
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: "user2RandomID",
-  },
-  f46gs2: {
-    longURL: "http://reddit.com",
-    userID: "user2RandomID",
-  },
-};
-
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
+const urlDatabase = {};
+const users = {};
 
 //GET ROUTES
 app.get("/", (req, res) => {
@@ -81,7 +44,7 @@ app.get("/urls", (req, res) => {
       .send("Cannot access URL's. Please sign or or create an account.");
   }
   const templateVars = {
-    urls: urlsForUser(req.session["user_id"]),
+    urls: urlsForUser(req.session["user_id"], urlDatabase),
     user: users[req.session["user_id"]],
   };
   res.render("urls_index", templateVars);
@@ -92,7 +55,7 @@ app.get("/register", (req, res) => {
     return res.redirect("/urls");
   }
   const templateVars = {
-    urls: urlsForUser(req.session["user_id"]),
+    urls: urlsForUser(req.session["user_id"], urlDatabase),
     user: users[req.session["user_id"]],
   };
   res.render("./user_registration", templateVars);
@@ -101,7 +64,7 @@ app.get("/register", (req, res) => {
 app.get("/urls.json", (req, res) => {
   const templateVars = {
     user: users[req.session["user_id"]],
-    urls: urlsForUser(req.session["user_id"]),
+    urls: urlsForUser(req.session["user_id"], urlDatabase),
   };
   res.json(urlDatabase, templateVars);
 });
@@ -127,6 +90,13 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    return res
+      .status(404)
+      .send(
+        "Error 404: Specified Short URL ID does not exist. Please try again."
+      );
+  }
   res.redirect(urlDatabase[req.params.id].longURL);
 });
 
@@ -137,7 +107,7 @@ app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     return res.status(400).send("URL ID not found.");
   }
-  const usersURLS = urlsForUser(req.session["user_id"]);
+  const usersURLS = urlsForUser(req.session["user_id"], urlDatabase);
   if (!usersURLS[req.params.id]) {
     return res.status(400).send("Permission denied");
   }
@@ -211,7 +181,7 @@ app.post("/urls/:id/delete", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     return res.status(400).send("URL ID not found.");
   }
-  const usersURLS = urlsForUser(req.session["user_id"]);
+  const usersURLS = urlsForUser(req.session["user_id"], urlDatabase);
   if (!usersURLS[req.params.id]) {
     return res.status(400).send("Permission denied");
   }
@@ -226,15 +196,13 @@ app.post("/urls/:id/update", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     return res.status(400).send("URL ID not found.");
   }
-  const usersURLS = urlsForUser(req.session["user_id"]);
+  const usersURLS = urlsForUser(req.session["user_id"], urlDatabase);
   if (!usersURLS[req.params.id]) {
     return res.status(400).send("Permission denied");
   }
   urlDatabase[req.params.id].longURL = req.body.newURL;
   res.redirect("/urls");
 });
-
-//RUN WHEN SERVER IS STARTED
 
 app.listen(PORT, () => {
   console.log(`TinyApp listening on port ${PORT}`);
