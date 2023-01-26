@@ -8,17 +8,6 @@ const generateRandomString = function () {
   return Math.random().toString(20).substr(2, 6);
 };
 
-//FUNCTION FOR USER LOOKUP BASED ON EMAIL
-
-const findUserByEmail = function (email, userDatabase) {
-  for (let user in userDatabase) {
-    if (email === userDatabase[user].email) {
-      return userDatabase[user];
-    }
-  }
-  return null;
-};
-
 //FUNCTION THAT RETURNS OBJECT CONTAINING URL's THAT BELONG TO THE USER
 const urlsForUser = function (user) {
   const urlList = {};
@@ -30,12 +19,14 @@ const urlsForUser = function (user) {
   return urlList;
 };
 
+//HELPER FUNCTIONS
+const { findUserByEmail } = require("./helpers");
+
 //MIDDLEWARE
 var cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
 const { resolveInclude } = require("ejs");
 const bcrypt = require("bcryptjs");
-const { findUserByEmail } = require("./helpers");
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(
